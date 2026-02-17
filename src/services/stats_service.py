@@ -34,6 +34,7 @@ def get_today_stats(user_id: int) -> dict:
         total_protein = sum(log.protein for log in logs)
         total_fat = sum(log.fat for log in logs)
         total_carbs = sum(log.carbs for log in logs)
+        total_fiber = sum(log.fiber for log in logs)
 
         # Список еды
         food_list = [f"• {log.food_name} — {log.calories} ккал" for log in logs]
@@ -43,6 +44,7 @@ def get_today_stats(user_id: int) -> dict:
             "protein": round(total_protein, 1),
             "fat": round(total_fat, 1),
             "carbs": round(total_carbs, 1),
+            "fiber": round(total_fiber, 1),
             "food_list": food_list,
             "count": len(logs),
         }
@@ -76,6 +78,7 @@ def get_yesterday_stats(user_id: int) -> dict:
         total_protein = sum(log.protein for log in logs)
         total_fat = sum(log.fat for log in logs)
         total_carbs = sum(log.carbs for log in logs)
+        total_fiber = sum(log.fiber for log in logs)
         food_list = [f"• {log.food_name} — {log.calories} ккал" for log in logs]
 
         return {
@@ -83,6 +86,7 @@ def get_yesterday_stats(user_id: int) -> dict:
             "protein": round(total_protein, 1),
             "fat": round(total_fat, 1),
             "carbs": round(total_carbs, 1),
+            "fiber": round(total_fiber, 1),
             "food_list": food_list,
             "count": len(logs),
         }
@@ -110,7 +114,7 @@ def get_week_stats(user_id: int) -> dict:
 
         # Группируем по дням
         daily_cal = {}
-        total_protein, total_fat, total_carbs = 0, 0, 0
+        total_protein, total_fat, total_carbs, total_fiber = 0, 0, 0, 0
 
         for log in logs:
             # Конвертируем UTC в МСК
@@ -120,6 +124,7 @@ def get_week_stats(user_id: int) -> dict:
             total_protein += log.protein
             total_fat += log.fat
             total_carbs += log.carbs
+            total_fiber += log.fiber
 
         if not daily_cal:
             return {"avg_calories": 0, "total_days": 0, "message": "Нет данных за неделю"}
@@ -136,6 +141,7 @@ def get_week_stats(user_id: int) -> dict:
             "protein": round(total_protein, 1),
             "fat": round(total_fat, 1),
             "carbs": round(total_carbs, 1),
+            "fiber": round(total_fiber, 1),
         }
 
 
@@ -161,7 +167,7 @@ def get_month_stats(user_id: int) -> dict:
 
         # Группируем по дням
         daily_cal = {}
-        total_protein, total_fat, total_carbs = 0, 0, 0
+        total_protein, total_fat, total_carbs, total_fiber = 0, 0, 0, 0
 
         for log in logs:
             log_msk = log.created_at + timedelta(hours=3)
@@ -170,6 +176,7 @@ def get_month_stats(user_id: int) -> dict:
             total_protein += log.protein
             total_fat += log.fat
             total_carbs += log.carbs
+            total_fiber += log.fiber
 
         if not daily_cal:
             return {"avg_calories": 0, "total_days": 0, "message": "Нет данных за месяц"}
@@ -186,6 +193,7 @@ def get_month_stats(user_id: int) -> dict:
             "protein": round(total_protein, 1),
             "fat": round(total_fat, 1),
             "carbs": round(total_carbs, 1),
+            "fiber": round(total_fiber, 1),
         }
 
 

@@ -51,6 +51,7 @@ class Profile(BaseModel):
     daily_protein = Column(Integer, default=100)
     daily_fat = Column(Integer, default=70)
     daily_carbs = Column(Integer, default=250)
+    daily_fiber = Column(Integer, default=30)  # Клетчатка 20-40г, берем 30г
 
     # Relationship
     user = relationship("User", back_populates="profile")

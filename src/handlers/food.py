@@ -123,6 +123,7 @@ async def handle_barcode_photo(update: Update, context: ContextTypes.DEFAULT_TYP
                             protein=round(proteins, 1),
                             fat=round(fat, 1),
                             carbs=round(carbs, 1),
+                            fiber=0,  # В штрих-коде пока не парсим клетчатку
                         )
                         db.add(food_log)
                         db.commit()
@@ -177,6 +178,7 @@ async def handle_barcode_photo(update: Update, context: ContextTypes.DEFAULT_TYP
                         protein=food["protein"],
                         fat=food["fat"],
                         carbs=food["carbs"],
+                        fiber=food.get("fiber", 0),
                     )
                     db.add(food_log)
                     db.commit()
@@ -273,6 +275,7 @@ async def process_food(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
             protein=nutrition["protein"],
             fat=nutrition["fat"],
             carbs=nutrition["carbs"],
+            fiber=nutrition.get("fiber", 0),
         )
         db.add(food_log)
         db.commit()
@@ -280,6 +283,7 @@ async def process_food(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         log_id = food_log.id
 
     keyboard = get_food_keyboard(log_id)
+    fiber_text = f" | К: {nutrition.get('fiber', 0)}г" if nutrition.get('fiber') else ""
     await update.message.reply_text(
         f"✅ Добавлено:\n\n"
         f"🍽️ {nutrition['name']}\n"
@@ -287,7 +291,8 @@ async def process_food(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         f"🔥 {nutrition['calories']} ккал\n"
         f"🥗 Б: {nutrition['protein']}г | "
         f"Ж: {nutrition['fat']}г | "
-        f"У: {nutrition['carbs']}г",
+        f"У: {nutrition['carbs']}г"
+        f"{fiber_text}",
         reply_markup=keyboard,
     )
 
@@ -335,6 +340,7 @@ async def handle_text_as_food(update: Update, context: ContextTypes.DEFAULT_TYPE
             protein=nutrition["protein"],
             fat=nutrition["fat"],
             carbs=nutrition["carbs"],
+            fiber=nutrition.get("fiber", 0),
         )
         db.add(food_log)
         db.commit()
@@ -342,6 +348,7 @@ async def handle_text_as_food(update: Update, context: ContextTypes.DEFAULT_TYPE
         log_id = food_log.id
 
     keyboard = get_food_keyboard(log_id)
+    fiber_text = f" | К: {nutrition.get('fiber', 0)}г" if nutrition.get('fiber') else ""
     await update.message.reply_text(
         f"✅ Добавлено:\n\n"
         f"🍽️ {nutrition['name']}\n"
@@ -349,7 +356,8 @@ async def handle_text_as_food(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"🔥 {nutrition['calories']} ккал\n"
         f"🥗 Б: {nutrition['protein']}г | "
         f"Ж: {nutrition['fat']}г | "
-        f"У: {nutrition['carbs']}г",
+        f"У: {nutrition['carbs']}г"
+        f"{fiber_text}",
         reply_markup=keyboard,
     )
 

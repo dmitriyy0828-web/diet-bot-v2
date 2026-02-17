@@ -19,6 +19,7 @@ class FoodItem(TypedDict):
     protein: float
     fat: float
     carbs: float
+    fiber: float
 
 
 class AIVisionResult(TypedDict):
@@ -51,7 +52,8 @@ def analyze_food_photo(photo_bytes: bytes, user_id: Optional[int] = None) -> AIV
 1. Если это смешанное блюдо (салат, суп, плов, каша) — верни ОДИН продукт
 2. Если это раздельные продукты (котлета + гречка + овощи) — верни НЕСКОЛЬКО продуктов
 3. Оцени граммовку по визуальному размеру порции
-4. Укажи КБЖУ на 100г (калории, белки, жиры, углеводы)
+4. Укажи КБЖУ на 100г (калории, белки, жиры, углеводы, клетчатку)
+5. Если клетчатка неизвестна — укажи 0
 
 ФОРМАТ ОТВЕТА (строго JSON):
 {
@@ -64,7 +66,8 @@ def analyze_food_photo(photo_bytes: bytes, user_id: Optional[int] = None) -> AIV
       "calories_per_100g": 120,
       "protein_per_100g": 5.2,
       "fat_per_100g": 3.1,
-      "carbs_per_100g": 18.5
+      "carbs_per_100g": 18.5,
+      "fiber_per_100g": 2.5
     }
   ]
 }
@@ -154,6 +157,7 @@ def analyze_food_photo(photo_bytes: bytes, user_id: Optional[int] = None) -> AIV
                     "protein": round(item.get("protein_per_100g", 0) * grams / 100, 1),
                     "fat": round(item.get("fat_per_100g", 0) * grams / 100, 1),
                     "carbs": round(item.get("carbs_per_100g", 0) * grams / 100, 1),
+                    "fiber": round(item.get("fiber_per_100g", 0) * grams / 100, 1),
                 }
             )
 

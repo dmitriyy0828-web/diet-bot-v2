@@ -52,8 +52,8 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         # === ШАПКА ТАБЛИЦЫ ===
         y = 10
 
-        # Ширины колонок - оптимизировано
-        col_widths = [230, 70, 90, 70, 70, 70]  # Название, гр, ккал, Б, Ж, У
+        # Ширины колонок - добавляем клетчатку
+        col_widths = [200, 60, 80, 60, 60, 60, 60]  # Название, гр, ккал, Б, Ж, У, Клетчатка
         col_x = [15]
         for w in col_widths[:-1]:
             col_x.append(col_x[-1] + w)
@@ -62,7 +62,7 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         draw.rectangle([(0, y), (width, y + 35)], fill=color_header_bg)
 
         # Заголовки столбцов - компактно
-        headers = ["Продукт", "Вес", "Ккал", "Белки", "Жиры", "Углеводы"]
+        headers = ["Продукт", "Вес", "Ккал", "Белки", "Жиры", "Углев.", "Клетч."]
         for i, (header, x) in enumerate(zip(headers, col_x)):
             if i == 2:  # Калории выделяем
                 draw.text((x + 5, y + 10), header, font=font_header, fill=color_cal)
@@ -78,6 +78,7 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         total_protein = 0
         total_fat = 0
         total_carbs = 0
+        total_fiber = 0
 
         for i, food in enumerate(foods):
             # Фон строки (чередуем)
@@ -88,24 +89,29 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
             draw.line([(0, y + row_height), (width, y + row_height)], fill="#e0e0e0", width=1)
 
             # Данные
-            name = food["name"][:20] if len(food["name"]) > 20 else food["name"]
+            name = food["name"][:18] if len(food["name"]) > 18 else food["name"]
             draw.text((col_x[0] + 5, y + 12), name, font=font_data, fill=color_text)
-            draw.text((col_x[1] + 15, y + 12), f"{food['grams']}г", font=font_data, fill=color_text)
+            draw.text((col_x[1] + 10, y + 12), f"{food['grams']}г", font=font_data, fill=color_text)
 
             # Калории - выделены
-            draw.text((col_x[2] + 10, y + 10), str(food["calories"]), font=font_cal, fill=color_cal)
+            draw.text((col_x[2] + 5, y + 10), str(food["calories"]), font=font_cal, fill=color_cal)
 
             # БЖУ
             draw.text(
-                (col_x[3] + 15, y + 12), str(food["protein"]), font=font_data, fill=color_text
+                (col_x[3] + 10, y + 12), str(food["protein"]), font=font_data, fill=color_text
             )
-            draw.text((col_x[4] + 15, y + 12), str(food["fat"]), font=font_data, fill=color_text)
-            draw.text((col_x[5] + 15, y + 12), str(food["carbs"]), font=font_data, fill=color_text)
+            draw.text((col_x[4] + 10, y + 12), str(food["fat"]), font=font_data, fill=color_text)
+            draw.text((col_x[5] + 10, y + 12), str(food["carbs"]), font=font_data, fill=color_text)
+            
+            # Клетчатка
+            fiber_val = food.get("fiber", 0)
+            draw.text((col_x[6] + 10, y + 12), str(fiber_val), font=font_data, fill=color_text)
 
             # Считаем итоги
             total_protein += float(food["protein"])
             total_fat += float(food["fat"])
             total_carbs += float(food["carbs"])
+            total_fiber += float(fiber_val)
 
             y += row_height
 
@@ -116,13 +122,16 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
 
             # Итоговые значения
             draw.text((col_x[0] + 5, y + 15), "ИТОГО:", font=font_footer, fill=color_text)
-            draw.text((col_x[2] + 10, y + 13), f"{total_calories}", font=font_cal, fill=color_cal)
+            draw.text((col_x[2] + 5, y + 13), f"{total_calories}", font=font_cal, fill=color_cal)
             draw.text(
                 (col_x[3] + 10, y + 15), f"{total_protein:.1f}", font=font_data, fill=color_text
             )
             draw.text((col_x[4] + 10, y + 15), f"{total_fat:.1f}", font=font_data, fill=color_text)
             draw.text(
                 (col_x[5] + 10, y + 15), f"{total_carbs:.1f}", font=font_data, fill=color_text
+            )
+            draw.text(
+                (col_x[6] + 10, y + 15), f"{total_fiber:.1f}", font=font_data, fill=color_text
             )
 
         # Внешняя рамка

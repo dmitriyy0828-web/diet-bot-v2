@@ -20,6 +20,7 @@ class FoodLog(BaseModel):
     protein = Column(Float, default=0.0)
     fat = Column(Float, default=0.0)
     carbs = Column(Float, default=0.0)
+    fiber = Column(Float, default=0.0)  # Клетчатка
 
     # Опционально: ID фото в Telegram
     photo_file_id = Column(String(200))

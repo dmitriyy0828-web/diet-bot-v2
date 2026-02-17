@@ -286,7 +286,7 @@ async def activity_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         f"• Активность: {activity_text}\n\n"
         f"📊 <b>Дневная норма:</b>\n"
         f"🔥 {needs['calories']} ккал\n"
-        f"🥗 Б: {needs['protein']}г | Ж: {needs['fat']}г | У: {needs['carbs']}г\n\n"
+        f"🥗 Б: {needs['protein']}г | Ж: {needs['fat']}г | У: {needs['carbs']}г | К: {needs['fiber']}г\n\n"
         f"📝 <i>Как считается:</i>\n"
         f"<i>Mifflin-St Jeor: базовый обмен × {activity_multiplier}</i>\n"
         f"<i>(БО: ~{needs['calories'] // activity_multiplier} ккал)</i>\n"

@@ -33,6 +33,8 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # Формируем список еды
     food_text = "\n".join(stats["food_list"]) if stats["food_list"] else "Нет записей"
+    
+    fiber_text = f"   Клетчатка: {stats['fiber']}г / {profile.daily_fiber}г\n" if hasattr(profile, 'daily_fiber') else ""
 
     await update.message.reply_text(
         f"📊 <b>Статистика за сегодня</b>\n\n"
@@ -42,7 +44,8 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         f"🥗 БЖУ:\n"
         f"   Белки: {stats['protein']}г / {profile.daily_protein}г\n"
         f"   Жиры: {stats['fat']}г / {profile.daily_fat}г\n"
-        f"   Углеводы: {stats['carbs']}г / {profile.daily_carbs}г\n\n"
+        f"   Углеводы: {stats['carbs']}г / {profile.daily_carbs}г\n"
+        f"{fiber_text}\n"
         f"🍽️ Съедено ({stats['count']} записей):\n"
         f"{food_text}",
         parse_mode="HTML",
@@ -70,6 +73,7 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         period_name = "Вчера"
     elif data == "stats:week":
         stats = get_week_stats(user.id)
+        fiber_text = f"   Клетчатка: {stats.get('fiber', 0)}г\n" if stats.get('fiber') else ""
         await query.edit_message_text(
             f"📊 <b>Статистика за неделю</b>\n\n"
             f"🔥 Всего калорий: {stats.get('total_calories', 0)} ккал\n"
@@ -79,12 +83,14 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             f"🥗 БЖУ за неделю:\n"
             f"   Белки: {stats.get('protein', 0)}г\n"
             f"   Жиры: {stats.get('fat', 0)}г\n"
-            f"   Углеводы: {stats.get('carbs', 0)}г",
+            f"   Углеводы: {stats.get('carbs', 0)}г\n"
+            f"{fiber_text}",
             parse_mode="HTML",
         )
         return
     elif data == "stats:month":
         stats = get_month_stats(user.id)
+        fiber_text = f"   Клетчатка: {stats.get('fiber', 0)}г\n" if stats.get('fiber') else ""
         await query.edit_message_text(
             f"📊 <b>Статистика за месяц</b>\n\n"
             f"🔥 Всего калорий: {stats.get('total_calories', 0)} ккал\n"
@@ -94,7 +100,8 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             f"🥗 БЖУ за месяц:\n"
             f"   Белки: {stats.get('protein', 0)}г\n"
             f"   Жиры: {stats.get('fat', 0)}г\n"
-            f"   Углеводы: {stats.get('carbs', 0)}г",
+            f"   Углеводы: {stats.get('carbs', 0)}г\n"
+            f"{fiber_text}",
             parse_mode="HTML",
         )
         return
@@ -108,6 +115,7 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     )
     food_text = "\n".join(stats["food_list"]) if stats["food_list"] else "Нет записей"
 
+    fiber_text = f"   Клетчатка: {stats['fiber']}г / {profile.daily_fiber}г\n" if hasattr(profile, 'daily_fiber') else ""
     await query.edit_message_text(
         f"📊 <b>Статистика: {period_name}</b>\n\n"
         f"🔥 Калории: {stats['calories']} / {profile.daily_calories} ккал\n"
@@ -116,7 +124,8 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"🥗 БЖУ:\n"
         f"   Белки: {stats['protein']}г / {profile.daily_protein}г\n"
         f"   Жиры: {stats['fat']}г / {profile.daily_fat}г\n"
-        f"   Углеводы: {stats['carbs']}г / {profile.daily_carbs}г\n\n"
+        f"   Углеводы: {stats['carbs']}г / {profile.daily_carbs}г\n"
+        f"{fiber_text}\n"
         f"🍽️ Съедено ({stats['count']} записей):\n"
         f"{food_text}",
         parse_mode="HTML",

@@ -37,8 +37,9 @@ def calculate_daily_needs(profile: Profile) -> dict:
     protein = int(calories * 0.30 / 4)  # 4 ккал/г
     fat = int(calories * 0.30 / 9)  # 9 ккал/г
     carbs = int(calories * 0.40 / 4)  # 4 ккал/г
+    fiber = 30  # Клетчатка 20-40г, берем 30г по умолчанию
 
-    return {"calories": calories, "protein": protein, "fat": fat, "carbs": carbs}
+    return {"calories": calories, "protein": protein, "fat": fat, "carbs": carbs, "fiber": fiber}
 
 
 def get_food_from_openfoodfacts(food_name: str) -> Optional[dict]:
@@ -81,6 +82,7 @@ def get_food_from_openfoodfacts(food_name: str) -> Optional[dict]:
                 "fat": nutriments.get("fat_100g", 0) or nutriments.get("fat", 0),
                 "carbs": nutriments.get("carbohydrates_100g", 0)
                 or nutriments.get("carbohydrates", 0),
+                "fiber": nutriments.get("fiber_100g", 0) or nutriments.get("fiber", 0),
             }
 
         # Если не нашли, пробуем английскую версию
@@ -106,6 +108,7 @@ def get_food_from_openfoodfacts(food_name: str) -> Optional[dict]:
                 "fat": nutriments.get("fat_100g", 0) or nutriments.get("fat", 0),
                 "carbs": nutriments.get("carbohydrates_100g", 0)
                 or nutriments.get("carbohydrates", 0),
+                "fiber": nutriments.get("fiber_100g", 0) or nutriments.get("fiber", 0),
             }
 
         return None
@@ -134,24 +137,25 @@ def calculate_food_nutrition(food_name: str, grams: int) -> dict:
             "protein": round(api_result["protein"] * ratio, 1),
             "fat": round(api_result["fat"] * ratio, 1),
             "carbs": round(api_result["carbs"] * ratio, 1),
+            "fiber": round(api_result.get("fiber", 0) * ratio, 1),
         }
 
     # Fallback: локальная база для популярных продуктов
     food_db = {
-        "курица": {"cal": 165, "protein": 31, "fat": 3.6, "carbs": 0},
-        "рис": {"cal": 130, "protein": 2.7, "fat": 0.3, "carbs": 28},
-        "гречка": {"cal": 132, "protein": 4.5, "fat": 1.6, "carbs": 24},
-        "овсянка": {"cal": 68, "protein": 2.4, "fat": 1.4, "carbs": 12},
-        "яйцо": {"cal": 155, "protein": 13, "fat": 11, "carbs": 1},
-        "яблоко": {"cal": 52, "protein": 0.3, "fat": 0.2, "carbs": 14},
-        "банан": {"cal": 89, "protein": 1.1, "fat": 0.3, "carbs": 23},
-        "творог": {"cal": 159, "protein": 18, "fat": 5, "carbs": 3},
-        "кефир": {"cal": 51, "protein": 3, "fat": 2.5, "carbs": 4},
+        "курица": {"cal": 165, "protein": 31, "fat": 3.6, "carbs": 0, "fiber": 0},
+        "рис": {"cal": 130, "protein": 2.7, "fat": 0.3, "carbs": 28, "fiber": 0.4},
+        "гречка": {"cal": 132, "protein": 4.5, "fat": 1.6, "carbs": 24, "fiber": 10},
+        "овсянка": {"cal": 68, "protein": 2.4, "fat": 1.4, "carbs": 12, "fiber": 1.7},
+        "яйцо": {"cal": 155, "protein": 13, "fat": 11, "carbs": 1, "fiber": 0},
+        "яблоко": {"cal": 52, "protein": 0.3, "fat": 0.2, "carbs": 14, "fiber": 2.4},
+        "банан": {"cal": 89, "protein": 1.1, "fat": 0.3, "carbs": 23, "fiber": 2.6},
+        "творог": {"cal": 159, "protein": 18, "fat": 5, "carbs": 3, "fiber": 0},
+        "кефир": {"cal": 51, "protein": 3, "fat": 2.5, "carbs": 4, "fiber": 0},
     }
 
     # Ищем по первому слову
     base_name = food_name.lower().split()[0]
-    data = food_db.get(base_name, {"cal": 100, "protein": 5, "fat": 3, "carbs": 15})
+    data = food_db.get(base_name, {"cal": 100, "protein": 5, "fat": 3, "carbs": 15, "fiber": 0})
 
     ratio = grams / 100
     return {
@@ -161,4 +165,5 @@ def calculate_food_nutrition(food_name: str, grams: int) -> dict:
         "protein": round(data["protein"] * ratio, 1),
         "fat": round(data["fat"] * ratio, 1),
         "carbs": round(data["carbs"] * ratio, 1),
+        "fiber": round(data.get("fiber", 0) * ratio, 1),
     }
