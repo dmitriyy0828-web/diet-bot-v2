@@ -1,0 +1,53 @@
+repos:
+  # Проверка синтаксиса Python
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-ast
+        name: "Проверка синтаксиса Python"
+      - id: check-json
+        name: "Проверка JSON"
+      - id: check-yaml
+        name: "Проверка YAML"
+      - id: check-merge-conflict
+        name: "Проверка конфликтов слияния"
+      - id: check-added-large-files
+        name: "Проверка больших файлов"
+        args: ['--maxkb=1000']
+      - id: trailing-whitespace
+        name: "Удаление пробелов в конце строк"
+      - id: end-of-file-fixer
+        name: "Исправление конца файла"
+
+  # Проверка секретов
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        name: "Проверка на секреты (API ключи, токены)"
+        args: ['--baseline', '.secrets.baseline']
+
+  # Форматирование кода (Black)
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        name: "Форматирование Black"
+        language_version: python3
+        args: ['--line-length=100']
+
+  # Линтинг (Flake8)
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        name: "Линтинг Flake8"
+        args: ['--max-line-length=100', '--ignore=E203,W503']
+
+  # Статический анализ (Bandit - безопасность)
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        name: "Проверка безопасности Bandit"
+        args: ['-ll', '-ii', '-x', 'tests/']

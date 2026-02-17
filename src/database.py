@@ -8,7 +8,7 @@ from src.config import config
 engine = create_engine(
     config.DATABASE_URL,
     echo=False,  # True для отладки SQL
-    connect_args={"check_same_thread": False} if "sqlite" in config.DATABASE_URL else {}
+    connect_args={"check_same_thread": False} if "sqlite" in config.DATABASE_URL else {},
 )
 
 # Фабрика сессий
@@ -26,7 +26,7 @@ def init_db() -> None:
 @contextmanager
 def get_db():
     """Контекстный менеджер для сессий БД.
-    
+
     Использование:
         with get_db() as db:
             user = db.query(User).first()

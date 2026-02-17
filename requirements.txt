@@ -10,6 +10,16 @@ python-dotenv==1.0.0
 # Logging
 loguru==0.7.2
 
+# AI Vision
+requests==2.31.0
+
+# Barcode & OCR
+pyzbar==0.1.9
+pillow==10.2.0
+pytesseract==0.3.10
+opencv-python==4.9.0.80
+numpy==1.26.3
+
 # Development
 pytest==7.4.4
 black==24.1.1

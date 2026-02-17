@@ -9,12 +9,12 @@ load_dotenv()
 @dataclass(frozen=True)
 class Config:
     """Настройки бота."""
-    
+
     BOT_TOKEN: str
     OPENROUTER_API_KEY: str
     DATABASE_URL: str
     ADMIN_ID: int | None
-    
+
     @classmethod
     def from_env(cls) -> "Config":
         """Загрузка конфигурации из окружения."""
@@ -22,9 +22,9 @@ class Config:
             BOT_TOKEN=os.getenv("BOT_TOKEN", ""),
             OPENROUTER_API_KEY=os.getenv("OPENROUTER_API_KEY", ""),
             DATABASE_URL=os.getenv("DATABASE_URL", "sqlite:///diet_bot.db"),
-            ADMIN_ID=int(os.getenv("ADMIN_ID")) if os.getenv("ADMIN_ID") else None
+            ADMIN_ID=int(os.getenv("ADMIN_ID")) if os.getenv("ADMIN_ID") else None,
         )
-    
+
     def validate(self) -> None:
         """Проверка обязательных настроек."""
         if not self.BOT_TOKEN:

@@ -7,7 +7,7 @@ from src.services.user_service import get_or_create_user, has_profile
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработка команды /start."""
     user = get_or_create_user(update.effective_user)
-    
+
     if not has_profile(user):
         await update.message.reply_text(
             "👋 Привет! Я твой персональный диетолог.\n\n"
