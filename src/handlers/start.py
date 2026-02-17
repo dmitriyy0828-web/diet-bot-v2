@@ -13,11 +13,17 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     user = get_or_create_user(update.effective_user)
 
     if not has_profile(user):
+        # Inline-кнопка регистрации
+        keyboard = [
+            [InlineKeyboardButton("📝 Зарегистрироваться", callback_data="start:register")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
         await update.message.reply_text(
             "👋 Привет! Я твой персональный диетолог.\n\n"
             "Я помогу отслеживать питание и достигать целей.\n\n"
-            "Для начала нужно заполнить профиль:\n"
-            "👉 /register"
+            "Для начала нужно заполнить профиль:",
+            reply_markup=reply_markup,
         )
     else:
         # Inline-кнопки под сообщением
@@ -57,8 +63,12 @@ async def start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Обработка inline-кнопок из /start."""
     query = update.callback_query
     await query.answer()
-
-    if query.data == "start:add_food":
+    
+    if query.data == "start:register":
+        # Запускаем регистрацию
+        from src.handlers.registration import start_registration
+        await start_registration(update, context)
+    elif query.data == "start:add_food":
         await query.edit_message_text(
             "🍽️ Отправь мне:\n"
             "• Фото еды - я распознаю КБЖУ\n"
@@ -123,10 +133,10 @@ def register_handlers(application: Application) -> None:
     """Регистрация обработчиков."""
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
-    
+
     # Обработчик inline-кнопок из /start
     application.add_handler(CallbackQueryHandler(start_callback, pattern=r"^start:"))
-    
+
     # Обработчики reply-кнопок (для обратной совместимости)
     application.add_handler(MessageHandler(filters.Regex(r"^🍽️ Добавить еду$"), add_food_button))
     application.add_handler(MessageHandler(filters.Regex(r"^📊 Статистика$"), stats_button))
