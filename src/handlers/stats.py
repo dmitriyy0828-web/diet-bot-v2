@@ -1,8 +1,13 @@
 """Обработчики статистики."""
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from src.services.user_service import get_user_by_telegram_id, has_profile
-from src.services.stats_service import get_today_stats
+from src.services.stats_service import (
+    get_today_stats,
+    get_yesterday_stats,
+    get_week_stats,
+    get_month_stats,
+)
 
 
 async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -40,6 +45,81 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
 
 
+async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка callback-кнопок статистики."""
+    query = update.callback_query
+    await query.answer()
+
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if not user or not has_profile(user):
+        await query.edit_message_text("❌ Сначала заполни профиль: /register")
+        return
+
+    profile = user.profile
+    data = query.data
+
+    if data == "stats:today":
+        stats = get_today_stats(user.id)
+        period_name = "Сегодня"
+    elif data == "stats:yesterday":
+        stats = get_yesterday_stats(user.id)
+        period_name = "Вчера"
+    elif data == "stats:week":
+        stats = get_week_stats(user.id)
+        await query.edit_message_text(
+            f"📊 <b>Статистика за неделю</b>\n\n"
+            f"🔥 Всего калорий: {stats.get('total_calories', 0)} ккал\n"
+            f"📈 Среднее в день: {stats.get('avg_calories', 0)} ккал\n"
+            f"📉 Мин: {stats.get('min_cal', 0)} / Макс: {stats.get('max_cal', 0)} ккал\n"
+            f"📅 Дней с записями: {stats.get('total_days', 0)}\n\n"
+            f"🥗 БЖУ за неделю:\n"
+            f"   Белки: {stats.get('protein', 0)}г\n"
+            f"   Жиры: {stats.get('fat', 0)}г\n"
+            f"   Углеводы: {stats.get('carbs', 0)}г",
+            parse_mode="HTML",
+        )
+        return
+    elif data == "stats:month":
+        stats = get_month_stats(user.id)
+        await query.edit_message_text(
+            f"📊 <b>Статистика за месяц</b>\n\n"
+            f"🔥 Всего калорий: {stats.get('total_calories', 0)} ккал\n"
+            f"📈 Среднее в день: {stats.get('avg_calories', 0)} ккал\n"
+            f"📉 Мин: {stats.get('min_cal', 0)} / Макс: {stats.get('max_cal', 0)} ккал\n"
+            f"📅 Дней с записями: {stats.get('total_days', 0)}\n\n"
+            f"🥗 БЖУ за месяц:\n"
+            f"   Белки: {stats.get('protein', 0)}г\n"
+            f"   Жиры: {stats.get('fat', 0)}г\n"
+            f"   Углеводы: {stats.get('carbs', 0)}г",
+            parse_mode="HTML",
+        )
+        return
+    else:
+        return
+
+    # Для сегодня и вчера (одинаковый формат)
+    remaining = profile.daily_calories - stats["calories"]
+    percentage = (
+        int((stats["calories"] / profile.daily_calories) * 100) if profile.daily_calories > 0 else 0
+    )
+    food_text = "\n".join(stats["food_list"]) if stats["food_list"] else "Нет записей"
+
+    await query.edit_message_text(
+        f"📊 <b>Статистика: {period_name}</b>\n\n"
+        f"🔥 Калории: {stats['calories']} / {profile.daily_calories} ккал\n"
+        f"📈 Прогресс: {percentage}%\n"
+        f"📉 Осталось: {remaining} ккал\n\n"
+        f"🥗 БЖУ:\n"
+        f"   Белки: {stats['protein']}г / {profile.daily_protein}г\n"
+        f"   Жиры: {stats['fat']}г / {profile.daily_fat}г\n"
+        f"   Углеводы: {stats['carbs']}г / {profile.daily_carbs}г\n\n"
+        f"🍽️ Съедено ({stats['count']} записей):\n"
+        f"{food_text}",
+        parse_mode="HTML",
+    )
+
+
 def register_handlers(application: Application) -> None:
     """Регистрация обработчиков."""
     application.add_handler(CommandHandler("today", today_command))
+    application.add_handler(CallbackQueryHandler(stats_callback, pattern=r"^stats:"))
