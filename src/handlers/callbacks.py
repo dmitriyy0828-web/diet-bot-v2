@@ -178,7 +178,7 @@ async def process_edit_input(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         # Отправляем в Gemma для анализа
         await update.message.reply_text("🤔 Думаю...")
-        gemma_result = parse_edit_command(text, available_foods)
+        gemma_result = parse_edit_command(text, available_foods, user_id=food_log.user_id)
 
         # Проверяем нужно ли уточнение (пункт 7-B)
         if gemma_result.get("clarification_needed"):

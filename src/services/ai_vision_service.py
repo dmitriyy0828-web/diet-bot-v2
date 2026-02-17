@@ -2,9 +2,10 @@
 import base64
 import json
 import logging
-from typing import TypedDict
+from typing import TypedDict, Optional
 import requests
 from src.config import config
+from src.services.ai_cost_service import log_ai_request
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,13 @@ class AIVisionResult(TypedDict):
     confidence: str  # high, medium, low
 
 
-def analyze_food_photo(photo_bytes: bytes) -> AIVisionResult:
+def analyze_food_photo(photo_bytes: bytes, user_id: Optional[int] = None) -> AIVisionResult:
     """
     Анализ фото еды через GPT-4 Vision.
+
+    Args:
+        photo_bytes: фото в формате bytes
+        user_id: ID пользователя для логирования стоимости
 
     Returns:
         AIVisionResult со списком продуктов и их КБЖУ
@@ -100,6 +105,29 @@ def analyze_food_photo(photo_bytes: bytes) -> AIVisionResult:
 
         response.raise_for_status()
         data = response.json()
+
+        # Логируем стоимость запроса
+        if user_id:
+            try:
+                usage = data.get("usage", {})
+                # OpenRouter возвращает cost в поле usage.cost или считаем по токенам
+                cost = data.get("cost", 0)  # OpenRouter иногда добавляет поле cost
+                if not cost and usage:
+                    # Приблизительный расчет: $0.005/1K input, $0.015/1K output для GPT-4o
+                    input_tokens = usage.get("prompt_tokens", 0)
+                    output_tokens = usage.get("completion_tokens", 0)
+                    cost = (input_tokens * 0.000005) + (output_tokens * 0.000015)
+                
+                log_ai_request(
+                    user_id=user_id,
+                    request_type="vision",
+                    model="openai/gpt-4o",
+                    cost_usd=cost,
+                    tokens_input=usage.get("prompt_tokens", 0),
+                    tokens_output=usage.get("completion_tokens", 0),
+                )
+            except Exception as e:
+                logger.error(f"Failed to log AI cost: {e}")
 
         # Парсим ответ AI
         ai_content = data["choices"][0]["message"]["content"]

@@ -18,3 +18,4 @@ class User(BaseModel):
     profile = relationship("Profile", back_populates="user", uselist=False)
     food_logs = relationship("FoodLog", back_populates="user", lazy="dynamic")
     weight_logs = relationship("WeightLog", back_populates="user", lazy="dynamic")
+    ai_usage_logs = relationship("AIUsageLog", back_populates="user", lazy="dynamic")

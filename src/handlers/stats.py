@@ -8,6 +8,10 @@ from src.services.stats_service import (
     get_week_stats,
     get_month_stats,
 )
+from src.services.ai_cost_service import get_all_users_costs, get_total_costs
+
+# ID админа (только этот пользователь может видеть /admin_costs)
+ADMIN_TELEGRAM_ID = 310010786
 
 
 async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -119,7 +123,36 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     )
 
 
+async def admin_costs_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Команда для админа: статистика расходов на AI."""
+    # Проверяем что вызвал только админ
+    if update.effective_user.id != ADMIN_TELEGRAM_ID:
+        await update.message.reply_text("❌ Нет доступа.")
+        return
+    
+    # Получаем данные за 30 дней
+    total = get_total_costs(days=30)
+    users = get_all_users_costs(days=30)
+    
+    # Формируем отчёт
+    text = (
+        f"💰 <b>Расходы на AI (30 дней)</b>\n\n"
+        f"Общие затраты: ${total['total_cost_usd']} (~{total['total_cost_rub']}₽)\n"
+        f"Всего запросов: {total['total_requests']}\n\n"
+        f"👥 <b>По пользователям:</b>\n"
+    )
+    
+    for user in users:
+        text += (
+            f"• {user['username']}: ${user['total_cost_usd']} "
+            f"({user['request_count']} запр.)\n"
+        )
+    
+    await update.message.reply_text(text, parse_mode="HTML")
+
+
 def register_handlers(application: Application) -> None:
     """Регистрация обработчиков."""
     application.add_handler(CommandHandler("today", today_command))
+    application.add_handler(CommandHandler("admin_costs", admin_costs_command))
     application.add_handler(CallbackQueryHandler(stats_callback, pattern=r"^stats:"))

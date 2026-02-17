@@ -1,19 +1,22 @@
 """Сервис Gemma 2B для понимания естественного языка при редактировании."""
 import json
 import logging
+from typing import Optional
 import requests
 from src.config import config
+from src.services.ai_cost_service import log_ai_request
 
 logger = logging.getLogger(__name__)
 
 
-def parse_edit_command(text: str, available_foods: list[str] = None) -> dict:
+def parse_edit_command(text: str, available_foods: list[str] = None, user_id: Optional[int] = None) -> dict:
     """
     Анализирует текст редактирования через Gemma 2B.
 
     Args:
         text: Текст от пользователя (голос или сообщение)
         available_foods: Список названий продуктов в текущей записи (для пункт 7)
+        user_id: ID пользователя для логирования стоимости
 
     Returns:
         dict: {"action": "change_grams"|"change_calories"|"change_product"|"unclear",
@@ -78,6 +81,26 @@ def parse_edit_command(text: str, available_foods: list[str] = None) -> dict:
 
         response.raise_for_status()
         data = response.json()
+
+        # Логируем стоимость запроса
+        if user_id:
+            try:
+                usage = data.get("usage", {})
+                # Gemma-2B: $0.0001/1K tokens
+                input_tokens = usage.get("prompt_tokens", 0)
+                output_tokens = usage.get("completion_tokens", 0)
+                cost = (input_tokens * 0.0000001) + (output_tokens * 0.0000001)
+                
+                log_ai_request(
+                    user_id=user_id,
+                    request_type="gemma",
+                    model="google/gemma-2-9b-it",
+                    cost_usd=cost,
+                    tokens_input=input_tokens,
+                    tokens_output=output_tokens,
+                )
+            except Exception as e:
+                logger.error(f"Failed to log Gemma cost: {e}")
 
         ai_content = data["choices"][0]["message"]["content"]
 

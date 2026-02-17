@@ -157,7 +157,7 @@ async def handle_barcode_photo(update: Update, context: ContextTypes.DEFAULT_TYP
         photo_bytes.seek(0)
         image_bytes = photo_bytes.read()
 
-        ai_result = analyze_food_photo(image_bytes)
+        ai_result = analyze_food_photo(image_bytes, user_id=user.id)
         logger.info(f"AI Vision результат: {len(ai_result.get('foods', []))} продуктов")
 
         await wait_message.delete()
