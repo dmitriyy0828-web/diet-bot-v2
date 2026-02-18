@@ -1,6 +1,7 @@
 """Точка входа для Diet Bot v2."""
 import logging
-from telegram.ext import Application
+from telegram.ext import Application, MessageHandler, filters
+from telegram import Update
 from src.config import config
 from src.database import init_db
 from src.handlers import (
@@ -10,6 +11,8 @@ from src.handlers import (
     register_stats_handlers,
     register_callback_handlers,
 )
+from src.services.token_logger import log_token_usage, get_daily_stats
+import time
 
 # Настройка логирования
 logging.basicConfig(
@@ -42,7 +45,8 @@ def main() -> None:
     register_stats_handlers(application)
     register_callback_handlers(application)
 
-    # Запуск
+    # Запуск с логированием токенов
+    logger.info(f"📊 Token logging enabled. Daily stats will be tracked.")
     application.run_polling(allowed_updates=["message", "callback_query"])
 
 

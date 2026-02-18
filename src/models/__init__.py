@@ -5,6 +5,7 @@ from src.models.profile import Profile, Gender, Goal, ActivityLevel
 from src.models.food_log import FoodLog
 from src.models.weight_log import WeightLog
 from src.models.ai_usage_log import AIUsageLog
+from src.models.food_cache import FoodCache
 
 __all__ = [
     "BaseModel",
@@ -17,4 +18,5 @@ __all__ = [
     "FoodLog",
     "WeightLog",
     "AIUsageLog",
+    "FoodCache",
 ]

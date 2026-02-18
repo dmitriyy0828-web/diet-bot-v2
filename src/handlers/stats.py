@@ -9,6 +9,7 @@ from src.services.stats_service import (
     get_month_stats,
 )
 from src.services.ai_cost_service import get_all_users_costs, get_total_costs
+from src.services.token_logger import get_daily_stats, format_cost_report
 
 # ID админа (только этот пользователь может видеть /admin_costs)
 ADMIN_TELEGRAM_ID = 310010786
@@ -33,8 +34,12 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # Формируем список еды
     food_text = "\n".join(stats["food_list"]) if stats["food_list"] else "Нет записей"
-    
-    fiber_text = f"   Клетчатка: {stats['fiber']}г / {profile.daily_fiber}г\n" if hasattr(profile, 'daily_fiber') else ""
+
+    fiber_text = (
+        f"   Клетчатка: {stats['fiber']}г / {profile.daily_fiber}г\n"
+        if hasattr(profile, "daily_fiber")
+        else ""
+    )
 
     await update.message.reply_text(
         f"📊 <b>Статистика за сегодня</b>\n\n"
@@ -73,7 +78,7 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         period_name = "Вчера"
     elif data == "stats:week":
         stats = get_week_stats(user.id)
-        fiber_text = f"   Клетчатка: {stats.get('fiber', 0)}г\n" if stats.get('fiber') else ""
+        fiber_text = f"   Клетчатка: {stats.get('fiber', 0)}г\n" if stats.get("fiber") else ""
         await query.edit_message_text(
             f"📊 <b>Статистика за неделю</b>\n\n"
             f"🔥 Всего калорий: {stats.get('total_calories', 0)} ккал\n"
@@ -90,7 +95,7 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
     elif data == "stats:month":
         stats = get_month_stats(user.id)
-        fiber_text = f"   Клетчатка: {stats.get('fiber', 0)}г\n" if stats.get('fiber') else ""
+        fiber_text = f"   Клетчатка: {stats.get('fiber', 0)}г\n" if stats.get("fiber") else ""
         await query.edit_message_text(
             f"📊 <b>Статистика за месяц</b>\n\n"
             f"🔥 Всего калорий: {stats.get('total_calories', 0)} ккал\n"
@@ -115,7 +120,11 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     )
     food_text = "\n".join(stats["food_list"]) if stats["food_list"] else "Нет записей"
 
-    fiber_text = f"   Клетчатка: {stats['fiber']}г / {profile.daily_fiber}г\n" if hasattr(profile, 'daily_fiber') else ""
+    fiber_text = (
+        f"   Клетчатка: {stats['fiber']}г / {profile.daily_fiber}г\n"
+        if hasattr(profile, "daily_fiber")
+        else ""
+    )
     await query.edit_message_text(
         f"📊 <b>Статистика: {period_name}</b>\n\n"
         f"🔥 Калории: {stats['calories']} / {profile.daily_calories} ккал\n"
@@ -138,11 +147,11 @@ async def admin_costs_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if update.effective_user.id != ADMIN_TELEGRAM_ID:
         await update.message.reply_text("❌ Нет доступа.")
         return
-    
+
     # Получаем данные за 30 дней
     total = get_total_costs(days=30)
     users = get_all_users_costs(days=30)
-    
+
     # Формируем отчёт
     text = (
         f"💰 <b>Расходы на AI (30 дней)</b>\n\n"
@@ -150,18 +159,28 @@ async def admin_costs_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"Всего запросов: {total['total_requests']}\n\n"
         f"👥 <b>По пользователям:</b>\n"
     )
-    
+
     for user in users:
         text += (
-            f"• {user['username']}: ${user['total_cost_usd']} "
-            f"({user['request_count']} запр.)\n"
+            f"• {user['username']}: ${user['total_cost_usd']} " f"({user['request_count']} запр.)\n"
         )
-    
+
     await update.message.reply_text(text, parse_mode="HTML")
+
+
+async def tokens_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Статистика использования токенов (только для админа)."""
+    if update.effective_user.id != 310010786:
+        return
+
+    stats = get_daily_stats()
+    report = format_cost_report(stats)
+    await update.message.reply_text(report)
 
 
 def register_handlers(application: Application) -> None:
     """Регистрация обработчиков."""
     application.add_handler(CommandHandler("today", today_command))
     application.add_handler(CommandHandler("admin_costs", admin_costs_command))
+    application.add_handler(CommandHandler("tokens", tokens_command))
     application.add_handler(CallbackQueryHandler(stats_callback, pattern=r"^stats:"))

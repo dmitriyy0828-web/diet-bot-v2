@@ -153,17 +153,14 @@ def calculate_food_nutrition(food_name: str, grams: int) -> dict:
         "кефир": {"cal": 51, "protein": 3, "fat": 2.5, "carbs": 4, "fiber": 0},
     }
 
-    # Ищем по первому слову
-    base_name = food_name.lower().split()[0]
-    data = food_db.get(base_name, {"cal": 100, "protein": 5, "fat": 3, "carbs": 15, "fiber": 0})
-
+    # Fallback: если не нашли — нули, а не "приблизительно"
     ratio = grams / 100
     return {
         "name": food_name,
         "grams": grams,
-        "calories": round(data["cal"] * ratio),
-        "protein": round(data["protein"] * ratio, 1),
-        "fat": round(data["fat"] * ratio, 1),
-        "carbs": round(data["carbs"] * ratio, 1),
-        "fiber": round(data.get("fiber", 0) * ratio, 1),
+        "calories": 0,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0,
+        "fiber": 0,
     }

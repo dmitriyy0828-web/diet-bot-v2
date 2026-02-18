@@ -7,13 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
-    """
-    Генерирует изображение таблицы с продуктами.
-    """
+    """Генерирует изображение таблицы с продуктами."""
     try:
-        # Размеры - компактнее
-        width = 700
-        row_height = 45
+        # Размеры - шире для 7-й колонки
+        width = 780
+        row_height = 42
         header_height = 50
         footer_height = 50 if len(foods) > 1 else 0
         padding = 15
@@ -27,14 +25,14 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         # Шрифты
         try:
             font_header = ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14
+            )
+            font_data = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13)
+            font_cal = ImageFont.truetype(
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 15
             )
-            font_data = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-            font_cal = ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16
-            )
             font_footer = ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14
             )
         except:
             font_header = ImageFont.load_default()
@@ -47,13 +45,14 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         color_light = "#f5f5f5"
         color_border = "#2196F3"
         color_cal = "#d32f2f"
+        color_fiber = "#388E3C"
         color_header_bg = "#e3f2fd"
 
         # === ШАПКА ТАБЛИЦЫ ===
         y = 10
 
-        # Ширины колонок - добавляем клетчатку
-        col_widths = [200, 60, 80, 60, 60, 60, 60]  # Название, гр, ккал, Б, Ж, У, Клетчатка
+        # Ширины колонок - сужены для 7 колонок
+        col_widths = [190, 65, 75, 65, 65, 75, 65]  # Название, гр, ккал, Б, Ж, У, Клетчатка
         col_x = [15]
         for w in col_widths[:-1]:
             col_x.append(col_x[-1] + w)
@@ -61,11 +60,13 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         # Фон шапки
         draw.rectangle([(0, y), (width, y + 35)], fill=color_header_bg)
 
-        # Заголовки столбцов - компактно
-        headers = ["Продукт", "Вес", "Ккал", "Белки", "Жиры", "Углев.", "Клетч."]
+        # Заголовки столбцов
+        headers = ["Продукт", "Вес", "Ккал", "Белки", "Жиры", "Углеводы", "Клетчатка"]
         for i, (header, x) in enumerate(zip(headers, col_x)):
             if i == 2:  # Калории выделяем
-                draw.text((x + 5, y + 10), header, font=font_header, fill=color_cal)
+                draw.text((x + 3, y + 10), header, font=font_header, fill=color_cal)
+            elif i == 6:  # Клетчатка зеленая
+                draw.text((x + 3, y + 10), header, font=font_header, fill=color_fiber)
             else:
                 draw.text((x + 5, y + 10), header, font=font_header, fill=color_text)
 
@@ -74,7 +75,7 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
         # Горизонтальная линия под шапкой
         draw.line([(0, y), (width, y)], fill=color_border, width=2)
 
-        # === СТРОКИ С ДАННЫМЫ ===
+        # === СТРОКИ С ДАННЫМИ ===
         total_protein = 0
         total_fat = 0
         total_carbs = 0
@@ -90,22 +91,25 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
 
             # Данные
             name = food["name"][:18] if len(food["name"]) > 18 else food["name"]
-            draw.text((col_x[0] + 5, y + 12), name, font=font_data, fill=color_text)
-            draw.text((col_x[1] + 10, y + 12), f"{food['grams']}г", font=font_data, fill=color_text)
+            draw.text((col_x[0] + 3, y + 12), name, font=font_data, fill=color_text)
+            draw.text((col_x[1] + 15, y + 12), f"{food['grams']}г", font=font_data, fill=color_text)
 
             # Калории - выделены
-            draw.text((col_x[2] + 5, y + 10), str(food["calories"]), font=font_cal, fill=color_cal)
+            draw.text((col_x[2] + 10, y + 10), str(food["calories"]), font=font_cal, fill=color_cal)
 
             # БЖУ
             draw.text(
-                (col_x[3] + 10, y + 12), str(food["protein"]), font=font_data, fill=color_text
+                (col_x[3] + 15, y + 12), str(food["protein"]), font=font_data, fill=color_text
             )
-            draw.text((col_x[4] + 10, y + 12), str(food["fat"]), font=font_data, fill=color_text)
-            draw.text((col_x[5] + 10, y + 12), str(food["carbs"]), font=font_data, fill=color_text)
-            
-            # Клетчатка
+            draw.text((col_x[4] + 15, y + 12), str(food["fat"]), font=font_data, fill=color_text)
+            draw.text((col_x[5] + 15, y + 12), str(food["carbs"]), font=font_data, fill=color_text)
+
+            # Клетчатка - зелёная если > 0
             fiber_val = food.get("fiber", 0)
-            draw.text((col_x[6] + 10, y + 12), str(fiber_val), font=font_data, fill=color_text)
+            if fiber_val > 0:
+                draw.text((col_x[6] + 18, y + 12), str(fiber_val), font=font_data, fill=color_fiber)
+            else:
+                draw.text((col_x[6] + 18, y + 12), "-", font=font_data, fill="#999999")
 
             # Считаем итоги
             total_protein += float(food["protein"])
@@ -122,7 +126,7 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
 
             # Итоговые значения
             draw.text((col_x[0] + 5, y + 15), "ИТОГО:", font=font_footer, fill=color_text)
-            draw.text((col_x[2] + 5, y + 13), f"{total_calories}", font=font_cal, fill=color_cal)
+            draw.text((col_x[2] + 10, y + 13), f"{total_calories}", font=font_cal, fill=color_cal)
             draw.text(
                 (col_x[3] + 10, y + 15), f"{total_protein:.1f}", font=font_data, fill=color_text
             )
@@ -130,9 +134,10 @@ def generate_food_table(foods: list[dict], total_calories: int = None) -> bytes:
             draw.text(
                 (col_x[5] + 10, y + 15), f"{total_carbs:.1f}", font=font_data, fill=color_text
             )
-            draw.text(
-                (col_x[6] + 10, y + 15), f"{total_fiber:.1f}", font=font_data, fill=color_text
-            )
+            if total_fiber > 0:
+                draw.text(
+                    (col_x[6] + 10, y + 15), f"{total_fiber:.1f}", font=font_data, fill=color_fiber
+                )
 
         # Внешняя рамка
         draw.rectangle([(0, 0), (width - 1, height - 1)], outline=color_border, width=2)
